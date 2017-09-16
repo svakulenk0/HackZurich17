@@ -48,11 +48,35 @@ class ReutersDatasource:
 
 def fetch_channels():
     '''
-    fetch a list of all available channels
+    look up the list of all available channels
     '''
     rd = ReutersDatasource()
     print rd.call('channels')
 
 
+def fetch_articles(channel_id='Wbz248', n=2):
+    # fetch id's and headlines for a channel
+    rd = ReutersDatasource()
+    articles = rd.call('items',
+                   {'channel': channel_id,
+                    'channelCategory':'OLR',
+                    'limit': str(n)})
+    return articles['results']
+
+
+def test_fetch_articles():
+    articles = fetch_articles()
+    print articles
+
+
+def fetch_annotations(article_id):
+    rd = ReutersDatasource()
+    return rd.call('itemEntities', {'id': article_id,})['items']
+
+
+def test_fetch_annotations():
+    print fetch_annotations('tag:reuters.com,2017:newsml_L2N1LW2CE:708688512')
+
+
 if __name__=='__main__':
-    fetch_channels()
+    test_fetch_annotations()
