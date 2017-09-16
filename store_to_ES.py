@@ -10,6 +10,7 @@ from elasticsearch import Elasticsearch
 from browse_reuters_json import *
 
 TR_INDEX = 'thomson'
+# TR_INDEX = 'thomson2'
 
 mapping = {
       'settings': {
@@ -33,12 +34,12 @@ def load_articles_in_ES(reset=False, limit=100):
     es = Elasticsearch()
 
     # reset index
-    try:
-        if reset:
+    if reset:
+        try:
             es.indices.delete(index=TR_INDEX)
-        es.indices.create(index=TR_INDEX, body=mapping)
-    except Exception as e:
-        print (e)
+            es.indices.create(index=TR_INDEX, body=mapping)
+        except Exception as e:
+            print (e)
 
     articles = fetch_articles(n=limit)
     print len(articles)
@@ -117,7 +118,6 @@ class ESClient():
                 }
         result = self.es.search(index=self.index, body=multi,)
         return result['hits']['hits'][0]['_source']['previewUrl']
-        
 
     def find_sample_articles_by_keywords(self, topic, entity):
         '''
@@ -227,7 +227,7 @@ def test_explore_trend(keyword='United States', index=TR_INDEX):
     db.find_sample_articles_by_keywords(topic, entity=keyword)
 
 
-def test_request_topic(topic='Technology_Internet', index=TR_INDEX):
+def test_request_topic(topic='Sports', index=TR_INDEX):
     '''
     handles topic-specific articles search or topic overview intent, e.g.
     'what's new in sports?'
@@ -235,11 +235,11 @@ def test_request_topic(topic='Technology_Internet', index=TR_INDEX):
     db = ESClient(index)
     categorized_articles, category_context = db.get_category_context(topic)
     print "I have %d articles about %s" % (len(categorized_articles), topic.replace('_', '&'))
-    headlines = [article['_source']['headline'] for article in categorized_articles]
+    headlines = set([article['_source']['headline'] for article in categorized_articles])
     print headlines
-    print category_context
+    # print category_context
 
-    print json.dumps(categorized_articles, indent=4, sort_keys=True)
+    # print json.dumps(categorized_articles, indent=4, sort_keys=True)
     # key1 = popular_keywords[1]['key']
     # print '%s and %s in %s' % (key1, popular_keywords[2]['key'], keyword)
     # db.find_sample_article_by_keyword(key1)
@@ -263,13 +263,13 @@ def intents_test_set():
     print '\n'
     # 3. show trending topics suggestions
     print get_trending_topics()
-    # print '\n'
+    print '\n'
     # 4. request news on a specific topic
-    # test_request_topic()
+    test_request_topic()
 
 
 if __name__ == '__main__':
-    # load_articles_in_ES(reset=True, n=500)
+    # load_articles_in_ES(reset=False, limit=500)
     # check_n_docs()
     # show_one()
     # test_search_photo()

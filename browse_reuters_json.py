@@ -54,7 +54,10 @@ def fetch_channels():
     print rd.call('channels')
 
 
-def fetch_articles(channel_id='Wbz248', n=2):
+def fetch_articles(channel_id='STK567', n=2):
+    '''
+    Wbz248 STK567
+    '''
     # fetch id's and headlines for a channel
     rd = ReutersDatasource()
     articles = rd.call('items',
@@ -79,4 +82,5 @@ def test_fetch_annotations():
 
 
 if __name__=='__main__':
-    test_fetch_annotations()
+    fetch_channels()
+    # test_fetch_annotations()
