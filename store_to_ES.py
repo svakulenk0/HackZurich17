@@ -100,8 +100,8 @@ class ESClient():
         headlines = []
         for article in result['hits']['hits']: 
             headlines.append(article['_source']['headline'])
-            print article['_source']['headline']
-        return headlines
+            # print article['_source']['headline']
+        return set(headlines)
 
     def find_sample_articles_by_keywords(self, topic, entity):
         '''
@@ -184,7 +184,7 @@ def get_trending_topics(index=TR_INDEX):
     return '%s is the most trending topic now. Are you interested in %s?' % (top_tag, top_tag)
 
 
-def test_search(keyword='London bombing', index=TR_INDEX):
+def search(keyword='London bombing', index=TR_INDEX):
     '''
     testing search intent
     '''
@@ -232,7 +232,7 @@ def intents_test_set():
     # test_explore_trend(keyword='United Kingdom')
     print '\n'
     # 2. search more info
-    test_search()
+    print search()
     print '\n'
     # 3. show trending topics suggestions
     print get_trending_topics()
