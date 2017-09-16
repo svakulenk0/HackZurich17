@@ -227,16 +227,21 @@ def test_explore_trend(keyword='United States', index=TR_INDEX):
     db.find_sample_articles_by_keywords(topic, entity=keyword)
 
 
-def test_request_topic(topic='Sports', index=TR_INDEX):
+def request_topic(topic, index=TR_INDEX):
     '''
     handles topic-specific articles search or topic overview intent, e.g.
     'what's new in sports?'
     '''
     db = ESClient(index)
     categorized_articles, category_context = db.get_category_context(topic)
-    print "I have %d articles about %s" % (len(categorized_articles), topic.replace('_', '&'))
-    headlines = set([article['_source']['headline'] for article in categorized_articles])
-    print headlines
+    response_string = "I have %d articles about %s:" % (len(categorized_articles), topic.replace('_', '&'))
+    headlines = list(set([article['_source']['headline'] for article in categorized_articles]))
+    return (response_string, headlines)
+
+
+def test_request_topic(topic='Sports'):
+    print request_topic(topic)
+
     # print category_context
 
     # print json.dumps(categorized_articles, indent=4, sort_keys=True)
@@ -269,9 +274,9 @@ def intents_test_set():
 
 
 if __name__ == '__main__':
-    load_articles_in_ES(reset=False, limit=500)
+    # load_articles_in_ES(reset=False, limit=500)
     # check_n_docs()
     # show_one()
     # test_search_photo()
 
-    # intents_test_set()
+    intents_test_set()
