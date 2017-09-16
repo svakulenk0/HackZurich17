@@ -269,9 +269,9 @@ def intents_test_set():
 
 
 if __name__ == '__main__':
-    # load_articles_in_ES(reset=False, limit=500)
+    load_articles_in_ES(reset=False, limit=500)
     # check_n_docs()
     # show_one()
     # test_search_photo()
 
-    intents_test_set()
+    # intents_test_set()
