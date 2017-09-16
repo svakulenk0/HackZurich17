@@ -85,12 +85,19 @@ class ESClient():
         # articles = [article['_id'] for article in result['hits']['hits']]
         # print len(articles)
 
-    def find_sample_article_by_keyword(self, keyword):
-        result = self.es.search(index=self.index, body={"query": {"match": {"annotations.entities.name": keyword}}})
+    def find_sample_article_by_keywords(self, topic, entity):
+        result = self.es.search(index=self.index, body={"query": {"match": {"annotations.entities.name": entity}}})
+        print(result['hits']['hits'][0]['_source']['headline']) 
+
+    def find_sample_article_by_entity(self, entity):
+        result = self.es.search(index=self.index, body={"query": {"match": {"annotations.entities.name": entity}}})
         print(result['hits']['hits'][0]['_source']['headline'])
 
 
 def get_top_trends(index=TR_INDEX):
+    '''
+    default welcome
+    '''
     db = ESClient(index)
     popular_keywords = db.aggregate()
     # print json.dumps(popular_keywords, indent=4, sort_keys=True)
@@ -103,12 +110,13 @@ def get_top_trends(index=TR_INDEX):
     trending_keyword = popular_entities[0]
     # tags
     popular_entity_tags = explore_trend(trending_keyword, db)
-    print '%s is all over the news right now! In relation to %s and %s.' % (trending_keyword, popular_entity_tags[0], popular_entity_tags[1])
+    print '%s is all over the news! In relation to %s and %s.' % (trending_keyword, popular_entity_tags[0], popular_entity_tags[1])
 
     # print '' % (popular_tags[0], popular_tags[1])
 
-    # popular_tags = [tag['key'].replace('_', ' & ') for tag in popular_keywords['tags']['buckets']]
-    # print 'Are you interested in %s?' % (popular_tags[0])
+    popular_tags = [tag['key'].replace('_', ' & ') for tag in popular_keywords['tags']['buckets']]
+    top_tag = popular_tags[0]
+    print '%s is the most trending topic now. Are you interested in %s?' % (top_tag, top_tag)
 
     # print 'Are you interested in %s or %s news?' % (popular_tags[0], popular_tags[1])
 
@@ -122,7 +130,10 @@ def explore_trend(keyword, db):
 
 def test_explore_trend(keyword='United States', index=TR_INDEX):
     db = ESClient(index)
-    explore_trend(keyword, db)
+    popular_entity_tags = explore_trend(keyword, db)
+    topic = popular_entity_tags[0]
+    print topic, keyword
+    db.find_sample_article_by_keywords(topic, entity=keyword)
 
     # print json.dumps(popular_keywords[1:], indent=4, sort_keys=True)
     # key1 = popular_keywords[1]['key']
