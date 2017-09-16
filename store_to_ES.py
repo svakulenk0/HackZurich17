@@ -29,7 +29,7 @@ mapping = {
     }
 
 
-def load_articles_in_ES(reset=True):
+def load_articles_in_ES(reset=False, limit=100):
     es = Elasticsearch()
 
     # reset index
@@ -40,7 +40,7 @@ def load_articles_in_ES(reset=True):
     except Exception as e:
         print (e)
 
-    articles = fetch_articles(n=100)
+    articles = fetch_articles(n=limit)
     print len(articles)
     for article in articles:
         doc = article
@@ -100,25 +100,29 @@ class ESClient():
         '''
         multi = {
                     "query": {
-                    "constant_score" : { 
-                             "filter" : {
-                                "bool" : {
-                                  "must" : {
-                                    "term" : { "annotations.entities.name" : entity },
-                                    "term" : { "annotations.tags.name" : topic }
-                                  }
-                                }
-                            }
+                        "bool" : {
+                          "must" : [
+                            {"term" : { "annotations.entities.name" : entity }},
+                            {"term" : { "annotations.tags.name" : topic }}
+                          ]
                         }
                     }
                  }
         result = self.es.search(index=self.index, body=multi)
+        # headlines = [article['_source']['headline'] for article in result['hits']['hits']]
+        random_article = result['hits']['hits'][0]
+        print random_article
         headline = result['hits']['hits'][0]['_source']['headline']
         source = result['hits']['hits'][0]['_source']['source']
         # print json.dumps(source, indent=4, sort_keys=True)
         return(headline, source)
 
     def get_category_context(self, topic):
+        '''
+        filter only the related organizations
+        '''
+        # "tags": {"terms": {"field": "annotations.tags.name"}}
+        # query = {"query": {"match": {"annotations.tags.name": topic}}, "aggs": {"tags": {"filter" : { "term" : { "annotations.entities.type" :  "http://s.opencalais.com/1/type/em/e/Organization" }}, "aggs" : {"tags_stats" : {"terms": {"field": "annotations.entities.name"}}}}}}
         result = self.es.search(index=self.index, body={"query": {"match": {"annotations.tags.name": topic}}, "aggs": {"tags": {"terms": {"field": "annotations.tags.name"}}, "entities": {"terms": {"field": "annotations.entities.name"}}}})
         return result['hits']['hits'], result['aggregations']
 
@@ -195,9 +199,11 @@ def test_request_topic(topic='Technology_Internet', index=TR_INDEX):
     db = ESClient(index)
     categorized_articles, category_context = db.get_category_context(topic)
     print "I have %d articles about %s" % (len(categorized_articles), topic.replace('_', '&'))
+    headlines = [article['_source']['headline'] for article in categorized_articles]
+    print headlines
     print category_context
 
-    # print json.dumps(categorized_articles, indent=4, sort_keys=True)
+    print json.dumps(categorized_articles, indent=4, sort_keys=True)
     # key1 = popular_keywords[1]['key']
     # print '%s and %s in %s' % (key1, popular_keywords[2]['key'], keyword)
     # db.find_sample_article_by_keyword(key1)
@@ -221,13 +227,14 @@ def intents_test_set():
     print '\n'
     # 3. show trending topics suggestions
     get_trending_topics()
-    print '\n'
+    # print '\n'
     # 4. request news on a specific topic
-    test_request_topic()
+    # test_request_topic()
 
 
 if __name__ == '__main__':
-    # load_articles_in_ES()
+    # load_articles_in_ES(reset=True, n=500)
     # check_n_docs()
-    # intents_test_set()
-    show_one()
+    # show_one()
+
+    intents_test_set()
