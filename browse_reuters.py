@@ -9,7 +9,6 @@ skurikhin, vakulenko
 import urllib2
 import urllib
 import time
-import json
 
 from xml.etree.ElementTree import ElementTree, fromstring
 
