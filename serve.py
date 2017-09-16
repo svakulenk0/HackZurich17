@@ -52,11 +52,22 @@ class ActionHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if intent == "Category request":
             topic =  body['result']['parameters']['topic']
-            list_headlines(request_topic(topic), s)
+            
+            stuff = request_topic(topic)
+            response = stuff[0]
+            headlines = stuff[1]
+
+            strings = list_headlines(headlines, s)
+            responses = []
+            responses.append(response + strings[0])
+            responses.append(response + strings[1])
+            s.wfile.write(json.dumps({"type" : 0, "speech": responses[0], "displayText": responses[1]}))
+
         elif intent == "Search":
             keyword = body['result']['parameters']['any']
-            list_headlines(search(keyword), s)
+            strings =  list_headlines(search(keyword), s)
 
+            s.wfile.write(json.dumps({"type" : 0, "speech": strings[0], "displayText": strings[1]}))
             #title = "here are some related articles I found"
             #subtitle = "I hope you like them"
             #headlines = test_search()
@@ -103,10 +114,10 @@ def get_response(intentName):
     else: 
         return "I'm sorry, we are busy right now"
 
-def list_headlines(headline_seti, s):
+def list_headlines(headline_set, s):
     #speech = "you are searching for " + keyword 
     if len(headline_set) == 0:
-        headlines = "nothing about " + keyword
+        headlines = "\nno results"
         display = headlines
     else:
         headlines = ""
@@ -120,8 +131,8 @@ def list_headlines(headline_seti, s):
                 display += headline
                 headlines += ".\n"
                 display += ".\n"
-    
-    s.wfile.write(json.dumps({"type" : 0, "speech": headlines, "displayText": display}))
+
+    return (headlines, display)
 
 def deploy():
     path = os.path.dirname(os.path.abspath(__file__))
