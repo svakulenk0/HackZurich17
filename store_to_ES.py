@@ -186,7 +186,9 @@ def get_top_trends(index=TR_INDEX):
     response_string += ' "%s" reports %s.' % (random_headline, source)
 
     # get a picture
+    rd = ReutersDatasource()
     photo_url = db.search_photo(random_headline)
+    photo_url = '%s?token=%s' % (photo_url, rd.authToken)
 
     # response_string += " Do you want to watch a video?"
     return (response_string, photo_url)
