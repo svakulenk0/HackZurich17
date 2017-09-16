@@ -92,16 +92,32 @@ class ESClient():
         popular_tags = [tag['key'] for tag in popular_keywords['tags']['buckets']]
         return popular_tags
 
-    def search(self, keyword, n=5):
+    def search(self, keyword):
         '''
         search for a sample of articles mentioning a custom keyword
         '''
         result = self.es.search(index=self.index, q=keyword)
-        headlines = []
-        for article in result['hits']['hits']: 
-            headlines.append(article['_source']['headline'])
-            # print article['_source']['headline']
+        headlines = [article['_source']['headline'] for article in result['hits']['hits']]
         return set(headlines)
+
+    def search_photo(self, keyword):
+        '''
+        search for photos with captions mentioning a custom keyword
+        ['_source']['mediaType']: u'V', 'G', 'C', 'T', 'P'
+        '''
+        multi = {
+                  "query": { 
+                    "bool": { 
+                      "must": [
+                        { "match": { "headline" : keyword }},
+                        { "match":  { "mediaType": 'P' }} 
+                      ],
+                    }
+                  }
+                }
+        result = self.es.search(index=self.index, body=multi,)
+        return result['hits']['hits'][0]['_source']['previewUrl']
+        
 
     def find_sample_articles_by_keywords(self, topic, entity):
         '''
@@ -168,8 +184,12 @@ def get_top_trends(index=TR_INDEX):
     # sample article about the tranding entity in the topic context
     random_headline, source = db.find_sample_articles_by_keywords(popular_entity_tags[0]['key'], entity=trending_entity)
     response_string += ' "%s" reports %s.' % (random_headline, source)
+
+    # get a picture
+    photo_url = db.search_photo(random_headline)
+
     # response_string += " Do you want to watch a video?"
-    return response_string
+    return (response_string, photo_url)
 
 
 def test_get_top_trends(index=TR_INDEX):
@@ -190,6 +210,11 @@ def search(keyword='London bombing', index=TR_INDEX):
     '''
     db = ESClient(index)
     return db.search(keyword)
+
+
+def test_search_photo(keyword='London bombing', index=TR_INDEX):
+    db = ESClient(index)
+    print db.search_photo(keyword)
 
 
 def test_explore_trend(keyword='United States', index=TR_INDEX):
@@ -245,5 +270,6 @@ if __name__ == '__main__':
     # load_articles_in_ES(reset=True, n=500)
     # check_n_docs()
     # show_one()
+    # test_search_photo()
 
     intents_test_set()
