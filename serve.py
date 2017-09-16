@@ -56,6 +56,7 @@ class ActionHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         displayText = speech
         s.wfile.write(json.dumps({"speech": speech, "displayText": displayText}))
 
+
 def get_response(intentName):
     print intentName
     if intentName == "Default Welcome Intent":
@@ -69,6 +70,7 @@ def get_response(intentName):
         return "always food to hear from you, friend"
     else: 
         return "I'm sorry, we are busy right now"
+
 
 def deploy():
     path = os.path.dirname(os.path.abspath(__file__))
