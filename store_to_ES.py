@@ -136,40 +136,41 @@ class ESClient():
         result = self.es.search(index=self.index, body={"query": {"match": {"annotations.entities.name": entity}}})
         print(result['hits']['hits'][0]['_source']['headline'])
 
-    def get_top_trends(self, index=TR_INDEX):
-        '''
-        default welcome
-        '''
-        popular_keywords = self.aggregate()
-        # print json.dumps(popular_keywords, indent=4, sort_keys=True)
-        # most_popular_keyword = popular_keywords[0]['key']
-        # print 'Do you want to learn more about %s or %s news?' % (most_popular_keyword, popular_keywords[1]['key'])
 
-        # entities
-        popular_entities = [entity['key'].split(',')[0] for entity in popular_keywords['entities']['buckets']]
-        # print 'News about %s and %s are trending right now!' % (popular_entities[0], popular_entities[1])
-        trending_entity = popular_entities[0]
-        # tagstrending_entity
-        # print trending_entity
-        popular_entity_tags = self.get_top_keywords(trending_entity)['tags']['buckets']
-        # print popular_entity_tags
-        # make tags readable for presentation
-        tags = [tag['key'].replace('_', '/') for tag in popular_entity_tags]
+def get_top_trends(index=TR_INDEX):
+    '''
+    default welcome
+    '''
+    db = ESClient(index)
+    popular_keywords = db.aggregate()
+    # print json.dumps(popular_keywords, indent=4, sort_keys=True)
+    # most_popular_keyword = popular_keywords[0]['key']
+    # print 'Do you want to learn more about %s or %s news?' % (most_popular_keyword, popular_keywords[1]['key'])
+
+    # entities
+    popular_entities = [entity['key'].split(',')[0] for entity in popular_keywords['entities']['buckets']]
+    # print 'News about %s and %s are trending right now!' % (popular_entities[0], popular_entities[1])
+    trending_entity = popular_entities[0]
+    # tagstrending_entity
+    # print trending_entity
+    popular_entity_tags = db.get_top_keywords(trending_entity)['tags']['buckets']
+    # print popular_entity_tags
+    # make tags readable for presentation
+    tags = [tag['key'].replace('_', '/') for tag in popular_entity_tags]
 
 
-        response_string = '%s is all over the news in relation to %s and %s:' % (trending_entity, tags[0], tags[1])
-        # print topic.replace('_', ', '), keyword
+    response_string = '%s is all over the news in relation to %s and %s:' % (trending_entity, tags[0], tags[1])
+    # print topic.replace('_', ', '), keyword
 
-        # sample article about the tranding entity in the topic context
-        random_headline, source = self.find_sample_articles_by_keywords(popular_entity_tags[0]['key'], entity=trending_entity)
-        response_string += ' "%s" reports %s.' % (random_headline, source)
-        response_string += " Do you want to watch a video?"
-        return response_string
+    # sample article about the tranding entity in the topic context
+    random_headline, source = db.find_sample_articles_by_keywords(popular_entity_tags[0]['key'], entity=trending_entity)
+    response_string += ' "%s" reports %s.' % (random_headline, source)
+    # response_string += " Do you want to watch a video?"
+    return response_string
 
 
 def test_get_top_trends(index=TR_INDEX):
-    db = ESClient(index)
-    print db.get_top_trends(index=TR_INDEX)
+    print get_top_trends(index=TR_INDEX)
 
 
 def get_trending_topics(index=TR_INDEX):
