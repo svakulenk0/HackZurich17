@@ -149,13 +149,13 @@ def get_top_trends(index=TR_INDEX):
     popular_entity_tags = explore_trend(trending_entity, db)
     # make tags readable for presentation
     tags = [tag.replace('_', ', ') for tag in popular_entity_tags]
-    print '%s is all over the news! In relation to %s and %s:' % (trending_entity, tags[0], tags[1])
+    return '%s is all over the news! In relation to %s and %s:' % (trending_entity, tags[0], tags[1])
     # print topic.replace('_', ', '), keyword
 
     # sample article about the tranding entity in the topic context
     random_headline, source = db.find_sample_articles_by_keywords(popular_entity_tags[0], entity=trending_entity)
-    print '"%s" reports %s' % (random_headline, source)
-    print "Do you want to watch a video?"
+    return '"%s" reports %s' % (random_headline, source)
+    return "Do you want to watch a video?"
     
     # print '' % (popular_tags[0], popular_tags[1])
 
@@ -165,7 +165,7 @@ def get_trending_topics(index=TR_INDEX):
     popular_keywords = db.aggregate()
     popular_tags = [tag['key'].replace('_', ' & ') for tag in popular_keywords['tags']['buckets']]
     top_tag = popular_tags[0]
-    print '%s is the most trending topic now. Are you interested in %s?' % (top_tag, top_tag)
+    return '%s is the most trending topic now. Are you interested in %s?' % (top_tag, top_tag)
 
 
 def explore_trend(keyword, db):
