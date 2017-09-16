@@ -34,10 +34,16 @@ class ActionHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         content_length = int(s.headers.getheader('content-length',0))
         content = s.rfile.read(content_length)
         body = json.loads(content)
-        
+       
+        query = body['result']['resolvedQuery']
+        try:
+            intent = body['result']['metadata']['intentName']
+        except KeyError:
+            intent = "None"
+
         ## debug
-        print "Query : " +  body['result']['resolvedQuery']
-        print "Intent : " + body['result']['metadata']['intentName']
+        print "Query : " + query
+        print "Intent : " + intent
 
         ## deal with response
         s.send_response(200)
@@ -45,16 +51,23 @@ class ActionHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         s.end_headers()
 
         # set response
-        speech = "The end of history has come, news not available" 
-        get_response(body['result']['metadata']['intentName'])
+        sample =  "news not available" 
+        speech = get_response(intent)
         displayText = speech
         s.wfile.write(json.dumps({"speech": speech, "displayText": displayText}))
 
 def get_response(intentName):
-    if intentName is "Propose categories":
-        print "get top trends"
-        print get_top_trends()
+    print "1" + intentName + "1"
+    if intentName == "Default Welcome Intent":
         return get_top_trends()
+    elif intentName == "Propose categories":
+        print "get top trends"
+        return get_trending_topics()
+    elif intentName == "Search":
+        return "the search function will soon be available"
+        #return test_search()
+    elif intentName == "None":
+        return "always food to hear from you, friend"
     else: 
         return "I'm sorry, we are busy right now"
 
