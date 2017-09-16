@@ -94,7 +94,7 @@ class ActionHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
             msg_type = 3
             s.wfile.write(json.dumps({"type": msg_type,"speech": "hello","imageUrl": url}))
-                
+            print url    
         else:
             speech = get_response(intent)
             msg_type = 0 # is text
