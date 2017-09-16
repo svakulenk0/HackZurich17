@@ -112,7 +112,10 @@ class ESClient():
                     }
                  }
         result = self.es.search(index=self.index, body=multi)
-        return(result['hits']['hits'][0]['_source']['headline']) 
+        headline = result['hits']['hits'][0]['_source']['headline']
+        source = result['hits']['hits'][0]['_source']['source']
+        # print json.dumps(source, indent=4, sort_keys=True)
+        return(headline, source) 
 
     def find_sample_article_by_entity(self, entity):
         result = self.es.search(index=self.index, body={"query": {"match": {"annotations.entities.name": entity}}})
@@ -141,8 +144,9 @@ def get_top_trends(index=TR_INDEX):
     # print topic.replace('_', ', '), keyword
 
     # sample article about the tranding entity in the topic context
-    random_headline = db.find_sample_articles_by_keywords(popular_entity_tags[0], entity=trending_entity)
-    print '"%s" reports BBC' % random_headline
+    random_headline, source = db.find_sample_articles_by_keywords(popular_entity_tags[0], entity=trending_entity)
+    print '"%s" reports %s' % (random_headline, source)
+    print "Do you want to watch a video?"
     
     # print '' % (popular_tags[0], popular_tags[1])
 
@@ -195,6 +199,7 @@ if __name__ == '__main__':
     # 1. default welcome current trends overview
     get_top_trends()
     # test_explore_trend(keyword='United Kingdom')
+    print '\n'
     # 2. search more info
     test_search()
     # show_one()
