@@ -90,7 +90,7 @@ class ActionHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
             url = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/U.S._Marines_in_Operation_Allen_Brook_%28Vietnam_War%29_001.jpg/220px-U.S._Marines_in_Operation_Allen_Brook_%28Vietnam_War%29_001.jpg" 
             msg_type = 3
-            s.wfile.write(json.dumps({"type": msg_type,"speech": "hello","imageUrl": url}))
+            s.wfile.write(json.dumps({"type": msg_type,"speech": speech,"imageUrl": url}))
             print url    
         else:
             speech = get_response(intent)
