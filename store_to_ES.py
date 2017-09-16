@@ -29,12 +29,13 @@ mapping = {
     }
 
 
-def load_articles_in_ES():
+def load_articles_in_ES(reset=True):
     es = Elasticsearch()
 
     # reset index
     try:
-      #  es.indices.delete(index=TR_INDEX)
+        if reset:
+            es.indices.delete(index=TR_INDEX)
         es.indices.create(index=TR_INDEX, body=mapping)
     except Exception as e:
         print (e)
@@ -115,7 +116,11 @@ class ESClient():
         headline = result['hits']['hits'][0]['_source']['headline']
         source = result['hits']['hits'][0]['_source']['source']
         # print json.dumps(source, indent=4, sort_keys=True)
-        return(headline, source) 
+        return(headline, source)
+
+    def get_category_context(self, topic):
+        result = self.es.search(index=self.index, body={"query": {"match": {"annotations.tags.name": topic}}, "aggs": {"tags": {"terms": {"field": "annotations.tags.name"}}, "entities": {"terms": {"field": "annotations.entities.name"}}}})
+        return result['hits']['hits'], result['aggregations']
 
     def find_sample_article_by_entity(self, entity):
         result = self.es.search(index=self.index, body={"query": {"match": {"annotations.entities.name": entity}}})
@@ -150,11 +155,13 @@ def get_top_trends(index=TR_INDEX):
     
     # print '' % (popular_tags[0], popular_tags[1])
 
-        # popular_tags = [tag['key'].replace('_', ' & ') for tag in popular_keywords['tags']['buckets']]
-        # top_tag = popular_tags[0]
-        # print '%s is the most trending topic now. Are you interested in %s?' % (top_tag, top_tag)
 
-    # print 'Are you interested in %s or %s news?' % (popular_tags[0], popular_tags[1])
+def get_trending_topics(index=TR_INDEX):
+    db = ESClient(index)
+    popular_keywords = db.aggregate()
+    popular_tags = [tag['key'].replace('_', ' & ') for tag in popular_keywords['tags']['buckets']]
+    top_tag = popular_tags[0]
+    print '%s is the most trending topic now. Are you interested in %s?' % (top_tag, top_tag)
 
 
 def explore_trend(keyword, db):
@@ -179,7 +186,18 @@ def test_explore_trend(keyword='United States', index=TR_INDEX):
     # print topic.replace('_', ', '), keyword
     db.find_sample_articles_by_keywords(topic, entity=keyword)
 
-    # print json.dumps(popular_keywords[1:], indent=4, sort_keys=True)
+
+def test_request_topic(topic='Technology_Internet', index=TR_INDEX):
+    '''
+    handles topic-specific articles search or topic overview intent, e.g.
+    'what's new in sports?'
+    '''
+    db = ESClient(index)
+    categorized_articles, category_context = db.get_category_context(topic)
+    print "I have %d articles about %s" % (len(categorized_articles), topic.replace('_', '&'))
+    print category_context
+
+    # print json.dumps(categorized_articles, indent=4, sort_keys=True)
     # key1 = popular_keywords[1]['key']
     # print '%s and %s in %s' % (key1, popular_keywords[2]['key'], keyword)
     # db.find_sample_article_by_keyword(key1)
@@ -193,13 +211,23 @@ def test_explore_trend(keyword='United States', index=TR_INDEX):
 #     trends = (popular_keywords[0]['key'], popular_keywords[1]['key'])
 
 
-if __name__ == '__main__':
-    load_articles_in_ES()
-    # check_n_docs()
+def intents_test_set():
     # 1. default welcome current trends overview
     get_top_trends()
     # test_explore_trend(keyword='United Kingdom')
     print '\n'
     # 2. search more info
     test_search()
-    # show_one()
+    print '\n'
+    # 3. show trending topics suggestions
+    get_trending_topics()
+    print '\n'
+    # 4. request news on a specific topic
+    test_request_topic()
+
+
+if __name__ == '__main__':
+    # load_articles_in_ES()
+    # check_n_docs()
+    # intents_test_set()
+    show_one()
