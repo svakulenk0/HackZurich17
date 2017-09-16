@@ -57,11 +57,10 @@ class ActionHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         s.wfile.write(json.dumps({"speech": speech, "displayText": displayText}))
 
 def get_response(intentName):
-    print "1" + intentName + "1"
+    print intentName
     if intentName == "Default Welcome Intent":
         return get_top_trends()
     elif intentName == "Propose categories":
-        print "get top trends"
         return get_trending_topics()
     elif intentName == "Search":
         return "the search function will soon be available"
