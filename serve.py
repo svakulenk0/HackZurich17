@@ -87,6 +87,14 @@ class ActionHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             #
             #s.wfile.write(json.dumps({"type": msg_type, "title": title, "buttons": buttons}))
             #s.wfile.write(response)
+        elif intent == "Default Welcome Intent":
+            intro = get_top_trends()
+            speech = intro[0]
+            url = intro[1]
+
+            msg_type = 3
+            s.wfile.write(json.dumps({"type": msg_type,"speech": "hello","imageUrl": url}))
+                
         else:
             speech = get_response(intent)
             msg_type = 0 # is text
