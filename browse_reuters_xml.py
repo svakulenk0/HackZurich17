@@ -3,7 +3,7 @@
 '''
 16 Sep 2017
 #HackZurich
-skurikhin, vakulenko
+skurikhin, svakulenko
 '''
 
 import urllib2
