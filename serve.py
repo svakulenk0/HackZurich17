@@ -50,27 +50,12 @@ class ActionHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         s.send_header("Content-type", "application/json")
         s.end_headers()
 
-        if intent == "Search":
+        if intent == "Category request":
+            topic =  body['result']['parameters']['topic']
+            list_headlines(request_topic(topic), s)
+        elif intent == "Search":
             keyword = body['result']['parameters']['any']
-            #speech = "you are searching for " + keyword 
-            headline_set = search(keyword)
-            if len(headline_set) == 0:
-                headlines = "nothing about " + keyword
-                display = headlines
-            else:
-                headlines = ""
-                display = ""
-                i = 0
-                for headline in headline_set:
-                    i += 1
-                    if i < 5:
-                        display += str(i) + ". "
-                        headlines += headline
-                        display += headline
-                        headlines += ".\n"
-                        display += ".\n"
-            
-            s.wfile.write(json.dumps({"type" : 0, "speech": headlines, "displayText": display}))
+            list_headlines(search(keyword), s)
 
             #title = "here are some related articles I found"
             #subtitle = "I hope you like them"
@@ -92,6 +77,7 @@ class ActionHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             speech = intro[0]
             url = intro[1]
 
+            url = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/U.S._Marines_in_Operation_Allen_Brook_%28Vietnam_War%29_001.jpg/220px-U.S._Marines_in_Operation_Allen_Brook_%28Vietnam_War%29_001.jpg" 
             msg_type = 3
             s.wfile.write(json.dumps({"type": msg_type,"speech": "hello","imageUrl": url}))
             print url    
@@ -117,6 +103,25 @@ def get_response(intentName):
     else: 
         return "I'm sorry, we are busy right now"
 
+def list_headlines(headline_seti, s):
+    #speech = "you are searching for " + keyword 
+    if len(headline_set) == 0:
+        headlines = "nothing about " + keyword
+        display = headlines
+    else:
+        headlines = ""
+        display = ""
+        i = 0
+        for headline in headline_set:
+            i += 1
+            if i < 5:
+                display += str(i) + ". "
+                headlines += headline
+                display += headline
+                headlines += ".\n"
+                display += ".\n"
+    
+    s.wfile.write(json.dumps({"type" : 0, "speech": headlines, "displayText": display}))
 
 def deploy():
     path = os.path.dirname(os.path.abspath(__file__))
