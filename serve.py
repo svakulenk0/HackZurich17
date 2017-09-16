@@ -50,11 +50,52 @@ class ActionHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         s.send_header("Content-type", "application/json")
         s.end_headers()
 
-        # set response
-        sample =  "news not available" 
-        speech = get_response(intent)
-        displayText = speech
-        s.wfile.write(json.dumps({"speech": speech, "displayText": displayText}))
+        if intent == "Search":
+            keyword = body['result']['parameters']['any']
+            #speech = "you are searching for " + keyword 
+            headline_set = search(keyword)
+            if len(headline_set) == 0:
+                headlines = "nothing about " + keyword
+                display = headlines
+            else:
+                headlines = ""
+                display = ""
+                i = 0
+                for headline in headline_set:
+                    i += 1
+                    if i < 5:
+                        display += str(i) + ". "
+                        headlines += headline
+                        display += headline
+                        headlines += ".\n"
+                        display += ".\n"
+            
+            s.wfile.write(json.dumps({"type" : 0, "speech": headlines, "displayText": display}))
+
+            #title = "here are some related articles I found"
+            #subtitle = "I hope you like them"
+            #headlines = test_search()
+            #msg_type = 1 # is a card
+            
+            #buttons = "{ "
+            #for headline in headlines:
+                #buttons += "{ \"text\" : "
+                #buttons += headline
+                #buttons += " , \"postback\" : www.reuters.com }, "
+            #      
+            #buttons += "{ \"text\" : more, \"postback\" : www.reuters.com }"
+            #
+            #s.wfile.write(json.dumps({"type": msg_type, "title": title, "buttons": buttons}))
+            #s.wfile.write(response)
+        else:
+            speech = get_response(intent)
+            msg_type = 0 # is text
+            displayText = speech
+            
+            # set response
+            sample =  "news not available" 
+            s.wfile.write(json.dumps({"type": msg_type, "speech": speech, "displayText": displayText}))
+
 
 
 def get_response(intentName):
@@ -63,9 +104,6 @@ def get_response(intentName):
         return get_top_trends()
     elif intentName == "Propose categories":
         return get_trending_topics()
-    elif intentName == "Search":
-        return "the search function will soon be available"
-        #return test_search()
     elif intentName == "None":
         return "always food to hear from you, friend"
     else: 
