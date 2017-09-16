@@ -29,7 +29,7 @@ mapping = {
     }
 
 
-def load_articles_in_ES(reset=True):
+def load_articles_in_ES(reset=False, limit=100):
     es = Elasticsearch()
 
     # reset index
@@ -40,7 +40,7 @@ def load_articles_in_ES(reset=True):
     except Exception as e:
         print (e)
 
-    articles = fetch_articles(n=100)
+    articles = fetch_articles(n=limit)
     print len(articles)
     for article in articles:
         doc = article
@@ -78,13 +78,19 @@ class ESClient():
         return result['aggregations']
         # return result['aggregations']['popular_terms']['buckets']
 
-    def explore_trend(self, keyword):
+    def get_top_keywords(self, keyword):
         result = self.es.search(index=self.index, body={"query": {"match": {"annotations.entities.name": keyword}}, "aggs": {"tags": {"terms": {"field": "annotations.tags.name"}}, "entities": {"terms": {"field": "annotations.entities.name"}}}})
         return result['aggregations']
         # ['popular_terms']['buckets']
         # print result['hits']['hits']
         # articles = [article['_id'] for article in result['hits']['hits']]
         # print len(articles)
+
+    def explore_trend(keyword, db):
+        popular_keywords = self.get_top_keywords(keyword)
+        # print json.dumps(popular_keywords, indent=4, sort_keys=True)
+        popular_tags = [tag['key'] for tag in popular_keywords['tags']['buckets']]
+        return popular_tags
 
     def search(self, keyword, n=5):
         '''
@@ -103,25 +109,29 @@ class ESClient():
         '''
         multi = {
                     "query": {
-                    "constant_score" : { 
-                             "filter" : {
-                                "bool" : {
-                                  "must" : {
-                                    "term" : { "annotations.entities.name" : entity },
-                                    "term" : { "annotations.tags.name" : topic }
-                                  }
-                                }
-                            }
+                        "bool" : {
+                          "must" : [
+                            {"term" : { "annotations.entities.name" : entity }},
+                            {"term" : { "annotations.tags.name" : topic }}
+                          ]
                         }
                     }
                  }
         result = self.es.search(index=self.index, body=multi)
+        # headlines = [article['_source']['headline'] for article in result['hits']['hits']]
+        random_article = result['hits']['hits'][0]
+        # print random_article
         headline = result['hits']['hits'][0]['_source']['headline']
         source = result['hits']['hits'][0]['_source']['source']
         # print json.dumps(source, indent=4, sort_keys=True)
         return(headline, source)
 
     def get_category_context(self, topic):
+        '''
+        filter only the related organizations
+        '''
+        # "tags": {"terms": {"field": "annotations.tags.name"}}
+        # query = {"query": {"match": {"annotations.tags.name": topic}}, "aggs": {"tags": {"filter" : { "term" : { "annotations.entities.type" :  "http://s.opencalais.com/1/type/em/e/Organization" }}, "aggs" : {"tags_stats" : {"terms": {"field": "annotations.entities.name"}}}}}}
         result = self.es.search(index=self.index, body={"query": {"match": {"annotations.tags.name": topic}}, "aggs": {"tags": {"terms": {"field": "annotations.tags.name"}}, "entities": {"terms": {"field": "annotations.entities.name"}}}})
         return result['hits']['hits'], result['aggregations']
 
@@ -129,34 +139,40 @@ class ESClient():
         result = self.es.search(index=self.index, body={"query": {"match": {"annotations.entities.name": entity}}})
         print(result['hits']['hits'][0]['_source']['headline'])
 
+    def get_top_trends(self, index=TR_INDEX):
+        '''
+        default welcome
+        '''
+        popular_keywords = self.aggregate()
+        # print json.dumps(popular_keywords, indent=4, sort_keys=True)
+        # most_popular_keyword = popular_keywords[0]['key']
+        # print 'Do you want to learn more about %s or %s news?' % (most_popular_keyword, popular_keywords[1]['key'])
 
-def get_top_trends(index=TR_INDEX):
-    '''
-    default welcome
-    '''
+        # entities
+        popular_entities = [entity['key'].split(',')[0] for entity in popular_keywords['entities']['buckets']]
+        # print 'News about %s and %s are trending right now!' % (popular_entities[0], popular_entities[1])
+        trending_entity = popular_entities[0]
+        # tagstrending_entity
+        # print trending_entity
+        popular_entity_tags = self.get_top_keywords(trending_entity)['tags']['buckets']
+        # print popular_entity_tags
+        # make tags readable for presentation
+        tags = [tag['key'].replace('_', '/') for tag in popular_entity_tags]
+
+
+        response_string = '%s is all over the news in relation to %s and %s:' % (trending_entity, tags[0], tags[1])
+        # print topic.replace('_', ', '), keyword
+
+        # sample article about the tranding entity in the topic context
+        random_headline, source = self.find_sample_articles_by_keywords(popular_entity_tags[0]['key'], entity=trending_entity)
+        response_string += ' "%s" reports %s.' % (random_headline, source)
+        response_string += " Do you want to watch a video?"
+        return response_string
+
+
+def test_get_top_trends(index=TR_INDEX):
     db = ESClient(index)
-    popular_keywords = db.aggregate()
-    # print json.dumps(popular_keywords, indent=4, sort_keys=True)
-    # most_popular_keyword = popular_keywords[0]['key']
-    # print 'Do you want to learn more about %s or %s news?' % (most_popular_keyword, popular_keywords[1]['key'])
-
-    # entities
-    popular_entities = [entity['key'].split(',')[0] for entity in popular_keywords['entities']['buckets']]
-    # print 'News about %s and %s are trending right now!' % (popular_entities[0], popular_entities[1])
-    trending_entity = popular_entities[0]
-    # tags
-    popular_entity_tags = explore_trend(trending_entity, db)
-    # make tags readable for presentation
-    tags = [tag.replace('_', ', ') for tag in popular_entity_tags]
-    return '%s is all over the news! In relation to %s and %s:' % (trending_entity, tags[0], tags[1])
-    # print topic.replace('_', ', '), keyword
-
-    # sample article about the tranding entity in the topic context
-    random_headline, source = db.find_sample_articles_by_keywords(popular_entity_tags[0], entity=trending_entity)
-    return '"%s" reports %s' % (random_headline, source)
-    return "Do you want to watch a video?"
-    
-    # print '' % (popular_tags[0], popular_tags[1])
+    print db.get_top_trends(index=TR_INDEX)
 
 
 def get_trending_topics(index=TR_INDEX):
@@ -165,13 +181,6 @@ def get_trending_topics(index=TR_INDEX):
     popular_tags = [tag['key'].replace('_', ' & ') for tag in popular_keywords['tags']['buckets']]
     top_tag = popular_tags[0]
     return '%s is the most trending topic now. Are you interested in %s?' % (top_tag, top_tag)
-
-
-def explore_trend(keyword, db):
-    popular_keywords = db.explore_trend(keyword)
-    # print json.dumps(popular_keywords, indent=4, sort_keys=True)
-    popular_tags = [tag['key'] for tag in popular_keywords['tags']['buckets']]
-    return popular_tags
 
 
 def test_search(keyword='London bombing', index=TR_INDEX):
@@ -198,9 +207,11 @@ def test_request_topic(topic='Technology_Internet', index=TR_INDEX):
     db = ESClient(index)
     categorized_articles, category_context = db.get_category_context(topic)
     print "I have %d articles about %s" % (len(categorized_articles), topic.replace('_', '&'))
+    headlines = [article['_source']['headline'] for article in categorized_articles]
+    print headlines
     print category_context
 
-    # print json.dumps(categorized_articles, indent=4, sort_keys=True)
+    print json.dumps(categorized_articles, indent=4, sort_keys=True)
     # key1 = popular_keywords[1]['key']
     # print '%s and %s in %s' % (key1, popular_keywords[2]['key'], keyword)
     # db.find_sample_article_by_keyword(key1)
@@ -216,21 +227,22 @@ def test_request_topic(topic='Technology_Internet', index=TR_INDEX):
 
 def intents_test_set():
     # 1. default welcome current trends overview
-    get_top_trends()
+    test_get_top_trends()
     # test_explore_trend(keyword='United Kingdom')
     print '\n'
     # 2. search more info
     test_search()
     print '\n'
     # 3. show trending topics suggestions
-    get_trending_topics()
-    print '\n'
+    print get_trending_topics()
+    # print '\n'
     # 4. request news on a specific topic
-    test_request_topic()
+    # test_request_topic()
 
 
 if __name__ == '__main__':
-    # load_articles_in_ES()
+    # load_articles_in_ES(reset=True, n=500)
     # check_n_docs()
-    # intents_test_set()
-    show_one()
+    # show_one()
+
+    intents_test_set()
