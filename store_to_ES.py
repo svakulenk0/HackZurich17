@@ -97,8 +97,11 @@ class ESClient():
         search for a sample of articles mentioning a custom keyword
         '''
         result = self.es.search(index=self.index, q=keyword)
-        headlines = set([article['_source']['headline'] for article in result['hits']['hits']]) 
-        print headlines
+        headlines = []
+        for article in result['hits']['hits']: 
+            headlines.append(article['_source']['headline'])
+            print article['_source']['headline']
+        return headlines
 
     def find_sample_articles_by_keywords(self, topic, entity):
         '''
@@ -186,7 +189,7 @@ def test_search(keyword='London bombing', index=TR_INDEX):
     testing search intent
     '''
     db = ESClient(index)
-    db.search(keyword)
+    return db.search(keyword)
 
 
 def test_explore_trend(keyword='United States', index=TR_INDEX):
