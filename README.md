@@ -9,11 +9,3 @@ Thomson News is a chatbot connected to Facebook Messenger and Google Actions (Go
 
 * apiai
 * elasticsearch
-
-## Acknowledgment
-
-* http://elasticsearch-py.readthedocs.io/en/master/
-
-## References
-
-* https://devcenter.heroku.com/articles/python-support
