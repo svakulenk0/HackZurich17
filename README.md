@@ -9,3 +9,7 @@ Thomson News is a chatbot connected to Facebook Messenger and Google Actions (Go
 
 * apiai
 * elasticsearch
+
+## Acknowledgement
+
+Powered by the [Reuters Media Connect API](https://rmb.reuters.com/agency-api-demo/agency/homectrl), [API.AI](https://api.ai) and [Google Actions](https://console.actions.google.com/project/newagent-bac93/simulatorcreate)
