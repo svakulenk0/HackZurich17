@@ -23,7 +23,7 @@ mapping = {
           'properties': {
             'headline': {'type': 'text', 'analyzer': 'english'},
             'annotations.entities.name': {'type': 'keyword'},
-            'annotations.tags.name': {'type': 'keyword'},
+            'tags': {'type': 'keyword'},
           }
         },
       }
@@ -48,7 +48,12 @@ def load_articles_in_ES(reset=False, limit=100):
         # print article
         annotations = fetch_annotations(article['id'])
         # print annotations
+        # entities.name
+        # annotations['tags'] = [tag.lower() ]
         doc['annotations'] = annotations
+        # lowercase tags
+        tags = [tag['name'].lower() for annotation in annotations for tag in annotation['tags']]
+        doc['tags'] = tags
         es.index(index=TR_INDEX, doc_type='articles',
                  body=doc)
 
@@ -74,13 +79,13 @@ class ESClient():
         '''
         returns the most popular keywords
         '''
-        result = self.es.search(index=self.index, body={"query": {"match_all": {}}, "aggs": {"tags": {"terms": {"field": "annotations.tags.name"}}, "entities": {"terms": {"field": "annotations.entities.name"}}}})
+        result = self.es.search(index=self.index, body={"query": {"match_all": {}}, "aggs": {"tags": {"terms": {"field": "tags"}}, "entities": {"terms": {"field": "annotations.entities.name"}}}})
         # return json.dumps(result, indent=4, sort_keys=True)
         return result['aggregations']
         # return result['aggregations']['popular_terms']['buckets']
 
     def get_top_keywords(self, keyword):
-        result = self.es.search(index=self.index, body={"query": {"match": {"annotations.entities.name": keyword}}, "aggs": {"tags": {"terms": {"field": "annotations.tags.name"}}, "entities": {"terms": {"field": "annotations.entities.name"}}}})
+        result = self.es.search(index=self.index, body={"query": {"match": {"annotations.entities.name": keyword}}, "aggs": {"tags": {"terms": {"field": "tags"}}, "entities": {"terms": {"field": "annotations.entities.name"}}}})
         return result['aggregations']
         # ['popular_terms']['buckets']
         # print result['hits']['hits']
@@ -148,7 +153,7 @@ class ESClient():
         '''
         # "tags": {"terms": {"field": "annotations.tags.name"}}
         # query = {"query": {"match": {"annotations.tags.name": topic}}, "aggs": {"tags": {"filter" : { "term" : { "annotations.entities.type" :  "http://s.opencalais.com/1/type/em/e/Organization" }}, "aggs" : {"tags_stats" : {"terms": {"field": "annotations.entities.name"}}}}}}
-        result = self.es.search(index=self.index, body={"query": {"match": {"annotations.tags.name": topic}}, "aggs": {"tags": {"terms": {"field": "annotations.tags.name"}}, "entities": {"terms": {"field": "annotations.entities.name"}}}})
+        result = self.es.search(index=self.index, body={"query": {"match": {"tags": topic}}, "aggs": {"tags": {"terms": {"field": "tags"}}, "entities": {"terms": {"field": "annotations.entities.name"}}}})
         return result['hits']['hits'], result['aggregations']
 
     def find_sample_article_by_entity(self, entity):
@@ -173,7 +178,7 @@ def get_top_trends(index=TR_INDEX):
     # tagstrending_entity
     # print trending_entity
     popular_entity_tags = db.get_top_keywords(trending_entity)['tags']['buckets']
-    # print popular_entity_tags
+    print popular_entity_tags
     # make tags readable for presentation
     tags = [tag['key'].replace('_', '/') for tag in popular_entity_tags]
 
@@ -239,7 +244,7 @@ def request_topic(topic, index=TR_INDEX):
     return (response_string, headlines)
 
 
-def test_request_topic(topic='Sports'):
+def test_request_topic(topic='sports'):
     print request_topic(topic)
 
     # print category_context
@@ -274,9 +279,9 @@ def intents_test_set():
 
 
 if __name__ == '__main__':
-    # load_articles_in_ES(reset=False, limit=500)
+    load_articles_in_ES(reset=True, limit=300)
     # check_n_docs()
     # show_one()
     # test_search_photo()
 
-    intents_test_set()
+    # intents_test_set()
