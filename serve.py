@@ -125,7 +125,7 @@ def list_headlines(headline_set, s):
         i = 0
         for headline in headline_set:
             i += 1
-            if i < 5:
+            if i < 4:
                 display += str(i) + ". "
                 headlines += headline
                 display += headline
