@@ -178,7 +178,7 @@ def get_top_trends(index=TR_INDEX):
     # tagstrending_entity
     # print trending_entity
     popular_entity_tags = db.get_top_keywords(trending_entity)['tags']['buckets']
-    print popular_entity_tags
+    # print popular_entity_tags
     # make tags readable for presentation
     tags = [tag['key'].replace('_', '/') for tag in popular_entity_tags]
 
@@ -279,9 +279,9 @@ def intents_test_set():
 
 
 if __name__ == '__main__':
-    load_articles_in_ES(reset=True, limit=300)
+    # load_articles_in_ES(reset=True, limit=300)
     # check_n_docs()
     # show_one()
     # test_search_photo()
 
-    # intents_test_set()
+    intents_test_set()

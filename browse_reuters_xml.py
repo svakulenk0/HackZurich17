@@ -161,7 +161,7 @@ def lookup_tags():
     headlines = set()
     tags = []
     entities = []
-    articles = fetch_channel(n=100)
+    articles = fetch_channel(channel_id='STK567', n=100)
     for article in articles:
         article_title = article['headline']
         if article_title not in headlines:
