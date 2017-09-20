@@ -1,6 +1,6 @@
 Thomson News is a chatbot connected to Facebook Messenger and Google Actions (Google Assistant) that allows you to explore the news content from Thomson Reuters in a simple and engaging way via a conversational interface powered with Google API.ai
 
-![useage example](https://github.com/vendi12/HackZurich17/raw/master/doc/1.png)
+![sample interactions](https://github.com/vendi12/HackZurich17/raw/master/doc/sample_interactions.gif)
 
 ## Features
 
